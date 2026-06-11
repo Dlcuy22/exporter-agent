@@ -24,7 +24,7 @@ docker run --rm --network host \
   -e PATH_PROCFS=/host/proc \
   -e PATH_SYSFS=/host/sys \
   -e PATH_ROOTFS=/rootfs \
-  esempe-exporter-agent
+  ghcr.io/dlcuy22/exporter-agent
 ```
 
 ### Using Go Install
