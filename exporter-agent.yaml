@@ -1,0 +1,8 @@
+pull_port: 9090
+push_url: ""
+push_interval: 15s
+agent_id_path: /var/lib/exporter-agent/state.json
+path_procfs: /proc
+path_sysfs: /sys
+path_rootfs: /
+mount_points_exclude_regex: ^/(sys|proc|dev|host|etc)($|/)

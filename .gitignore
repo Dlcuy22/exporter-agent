@@ -1,0 +1,26 @@
+# Binaries
+bin/
+exporter-agent
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary and coverage
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Runtime state & data
+state.json
+result*.json
+*.log
+
+# IDEs and OS files
+.idea/
+.vscode/
+.DS_Store

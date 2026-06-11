@@ -1,0 +1,25 @@
+# Git and OS
+.git
+.gitignore
+.DS_Store
+
+# Build outputs
+/exporter-agent
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Local configs and state
+state.json
+exporter-agent.yaml
+
+# Go workspace
+*.test
+*.out
+/vendor/
+
+# Test/dev tools
+.dockerignore
+Dockerfile
