@@ -24,7 +24,7 @@ docker run --rm --network host \
   -e PATH_PROCFS=/host/proc \
   -e PATH_SYSFS=/host/sys \
   -e PATH_ROOTFS=/rootfs \
-  ghcr.io/dlcuy22/exporter-agent
+  ghcr.io/dlcuy22/exporter-agent:main
 ```
 
 ### Using Go Install
