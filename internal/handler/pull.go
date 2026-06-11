@@ -40,6 +40,14 @@ func StartPullServer(d *daemon.Daemon) *http.Server {
 			return
 		}
 
+		if d.Config().PullAuth {
+			token := r.Header.Get("X-Token")
+			if token == "" || token != d.Config().PullToken {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+		}
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 

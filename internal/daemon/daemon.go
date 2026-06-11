@@ -29,13 +29,14 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 )
 
-const AGENT_VERSION = "0.1.2"
+const AGENT_VERSION = "0.2.0"
 
 /*
 State represents the on-disk state.
 */
 type State struct {
-	AgentID string `json:"agent_id"`
+	AgentID   string `json:"agent_id"`
+	PullToken string `json:"pull_token,omitempty"`
 }
 
 /*
@@ -81,39 +82,63 @@ func New(cfg *config.Config, collectors []collector.Collector) (*Daemon, error) 
 func (d *Daemon) loadOrInitState() (string, error) {
 	path := d.cfg.AgentIDPath
 
+	var state State
+	var loaded bool
+	
 	// Try reading
 	data, err := os.ReadFile(path)
 	if err == nil {
-		var state State
 		if err := json.Unmarshal(data, &state); err == nil && state.AgentID != "" {
-			return state.AgentID, nil
+			loaded = true
 		}
 	}
 
-	// Create dir if not exists. Fallback to current directory if permission denied.
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		log.Printf("Warning: failed to create state dir %s: %v. Falling back to ./state.json", dir, err)
-		path = "./state.json"
-		d.cfg.AgentIDPath = path
+	needsSave := false
+
+	if !loaded {
+		// Create dir if not exists. Fallback to current directory if permission denied.
+		dir := filepath.Dir(path)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Printf("Warning: failed to create state dir %s: %v. Falling back to ./state.json", dir, err)
+			path = "./state.json"
+			d.cfg.AgentIDPath = path
+		}
+		
+		state.AgentID = uuid.New().String()
+		needsSave = true
 	}
 
-	// Generate new UUID
-	id := uuid.New().String()
-	state := State{AgentID: id}
-	out, err := json.MarshalIndent(state, "", "  ")
-	if err != nil {
-		return "", err
+	// Handle Pull Token Generation
+	if d.cfg.PullAuth && d.cfg.PullToken == "" {
+		if state.PullToken != "" {
+			d.cfg.PullToken = state.PullToken
+		} else {
+			state.PullToken = uuid.New().String()
+			d.cfg.PullToken = state.PullToken
+			needsSave = true
+		}
 	}
 
-	if err := os.WriteFile(path, out, 0644); err != nil {
-		log.Printf("Warning: failed to save state to %s: %v", path, err)
-		// Return ID anyway so it can run ephemerally
-		return id, nil
+	if needsSave {
+		out, err := json.MarshalIndent(state, "", "  ")
+		if err != nil {
+			return "", err
+		}
+
+		if err := os.WriteFile(path, out, 0644); err != nil {
+			log.Printf("Warning: failed to save state to %s: %v", path, err)
+			return state.AgentID, nil
+		}
+
+		if !loaded {
+			log.Printf("Initialized new Agent ID: %s at %s", state.AgentID, path)
+		}
+		if d.cfg.PullAuth && state.PullToken != "" {
+			log.Printf("Initialized Pull Token (X-Token): %s", state.PullToken)
+		}
 	}
 
-	log.Printf("Initialized new Agent ID: %s at %s", id, path)
-	return id, nil
+	return state.AgentID, nil
 }
 
 /*

@@ -25,6 +25,8 @@ import (
 // Config holds the complete configuration for the exporter-agent.
 type Config struct {
 	PullPort                int    `yaml:"pull_port"`
+	PullAuth                bool   `yaml:"pull_auth"`
+	PullToken               string `yaml:"pull_token"`
 	PushURL                 string `yaml:"push_url"`
 	PushInterval            string `yaml:"push_interval"` // e.g., "15s"
 	AgentIDPath             string `yaml:"agent_id_path"`
@@ -38,6 +40,8 @@ type Config struct {
 func defaultConfig() Config {
 	return Config{
 		PullPort:                8080,
+		PullAuth:                false,
+		PullToken:               "",
 		PushURL:                 "",
 		PushInterval:            "15s",
 		AgentIDPath:             "/var/lib/exporter-agent/state.json",
@@ -75,6 +79,14 @@ func Load(yamlPath string) (*Config, bool, error) {
 			cfg.PullPort = p
 		}
 	}
+	if v := os.Getenv("PULL_AUTH"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			cfg.PullAuth = b
+		}
+	}
+	if v := os.Getenv("PULL_TOKEN"); v != "" {
+		cfg.PullToken = v
+	}
 	if v := os.Getenv("PUSH_URL"); v != "" {
 		cfg.PushURL = v
 	}
@@ -102,6 +114,8 @@ func Load(yamlPath string) (*Config, bool, error) {
 	fs := flag.NewFlagSet("exporter-agent", flag.ContinueOnError)
 
 	pullPortFlag := fs.Int("pull.port", cfg.PullPort, "HTTP pull port")
+	pullAuthFlag := fs.Bool("pull.auth", cfg.PullAuth, "Require X-Token auth for pull endpoint")
+	pullTokenFlag := fs.String("pull.token", cfg.PullToken, "Static token for pull endpoint")
 	pushURLFlag := fs.String("push.url", cfg.PushURL, "Push endpoint URL")
 	pushIntervalFlag := fs.String("push.interval", cfg.PushInterval, "Push interval (e.g., 15s)")
 	agentIDPathFlag := fs.String("agent.id.path", cfg.AgentIDPath, "Path to store agent ID state")
@@ -119,6 +133,8 @@ func Load(yamlPath string) (*Config, bool, error) {
 	// Since we set the default of flags to the ENV/YAML override above,
 	// the flag value itself handles the priority correctly.
 	cfg.PullPort = *pullPortFlag
+	cfg.PullAuth = *pullAuthFlag
+	cfg.PullToken = *pullTokenFlag
 	cfg.PushURL = *pushURLFlag
 	cfg.PushInterval = *pushIntervalFlag
 	cfg.AgentIDPath = *agentIDPathFlag

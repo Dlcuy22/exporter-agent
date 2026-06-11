@@ -14,7 +14,7 @@ import (
 	"github.com/dlcuy22/exporter-agent/internal/handler"
 )
 
-const AGENT_VERSION = "0.1.0"
+const AGENT_VERSION = "0.2.0"
 
 func main() {
 	// Parse configurations

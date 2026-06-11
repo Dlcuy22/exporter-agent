@@ -12,9 +12,23 @@ This project is part of the Esempe.id Minecraft hosting service. It is a node mo
 
 You can run the agent using Docker or install it directly using Go.
 
+### Modes
+
+The agent can operate in two different data delivery modes: Pull and Push. You can use one or both simultaneously depending on your infrastructure.
+
+#### Pull Mode
+
+In pull mode, the agent exposes an HTTP endpoint (`/metrics`) on the configured port. A centralized monitoring server can periodically scrape this endpoint to retrieve the metrics.
+
+**Authentication:** To secure the metrics endpoint, you can enable token-based authentication by setting `PULL_AUTH=true`. When enabled, the agent requires an `X-Token` header on all requests. If no token is provided in the configuration, the agent will automatically generate a secure UUID token on its first run and save it securely.
+
+#### Push Mode
+
+In push mode, the agent proactively sends its collected metrics to a centralized server at a specified interval. To enable this mode, provide a valid URL to the `PUSH_URL` configuration. The agent will then securely POST the metrics data to that endpoint every `PUSH_INTERVAL` (e.g., `15s`).
+
 ### Using Docker
 
-To run the agent using Docker, execute the following command:
+To quickly run and test the agent using Docker, execute the following command:
 
 ```bash
 docker run --rm --network host \
@@ -42,6 +56,8 @@ The configuration is loaded by reading from YAML, ENV, and CLI Flags in the foll
 The agent uses a configuration file named `exporter-agent.yaml`. Here are the configuration options available along with their environment variable equivalents:
 
 - pull_port (ENV: PULL_PORT): The port used to expose the metrics for pulling.
+- pull_auth (ENV: PULL_AUTH): Set to true to require an X-Token header on the pull endpoint.
+- pull_token (ENV: PULL_TOKEN): A static token for pull authentication. If left empty while pull_auth is true, the agent automatically generates one.
 - push_url (ENV: PUSH_URL): The endpoint URL where the agent will push metrics. Leave this empty to disable pushing.
 - push_interval (ENV: PUSH_INTERVAL): The time interval between push requests.
 - agent_id_path (ENV: AGENT_ID_PATH): The file path where the agent stores its unique identifier.
