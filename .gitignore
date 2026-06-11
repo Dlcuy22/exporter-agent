@@ -1,6 +1,6 @@
 # Binaries
 bin/
-exporter-agent
+/exporter-agent
 *.exe
 *.exe~
 *.dll
